@@ -39,5 +39,26 @@ public class Graph {
 		} 
 	}
 	
+	public String distance(String route){
+		int sum = 0, w;
+		String left = route.substring(0,1);
+		route = route.substring(2, route.length());
+		
+		for(String right : route.split("-")){
+			w = W[H.get(left)][H.get(right)];
+			if(w > 0)
+				sum += w;
+			else
+				return "NO SUCH ROUTE"; 
+			left = right;
+		}
+		return Integer.toString(sum);
+	}
 	
+	public int trips(String type, String start, String end){
+		Set<String> valid_routes = new HashSet<>();
+		
+		
+		return 0;
+	}
 }
