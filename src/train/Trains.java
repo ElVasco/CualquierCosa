@@ -14,6 +14,7 @@ public class Trains {
 		System.out.println(G.distance("A-D-C"));
 		System.out.println(G.distance("A-E-B-C-D"));
 		System.out.println(G.distance("A-E-D"));
+		System.out.println(G.dijkstra("A", "C", true));
 	}
 
 }
