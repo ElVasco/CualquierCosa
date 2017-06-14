@@ -1,8 +1,8 @@
 package trains;
 import java.util.ArrayList;
 import java.util.HashMap;
-//import java.util.HashSet;
-//import java.util.Set;
+import java.util.HashSet;
+import java.util.Set;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,7 +12,7 @@ import java.util.Scanner;
 public class Graph {
 	public int W[][];
 	public HashMap<String, Integer> H = new HashMap<String, Integer>();
-	public static String[] towns = {"A", "B", "C", "D", "E"};
+	public String[] towns = {"A", "B", "C", "D", "E"};
 	
 	public Graph(String file){
 		// TODO: Generalize H for all possible keys. Ask possible names.
@@ -38,16 +38,7 @@ public class Graph {
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-
-		
-		for(int i = 0; i < 5;i++){
-			for(int j = 0; j< 5; j++){
-				System.out.print(W[i][j]+ " ");
-			}
-			System.out.println(" ");
-		}
-		
+		}	
 	}
 	
 	public String distance(String route){
@@ -66,13 +57,98 @@ public class Graph {
 		return Integer.toString(sum);
 	}
 	
-	public int trips(String type, String start, String end){
-		//Set<String> valid_routes = new HashSet<>();
-		//Set<String> actual_routes = new HashSet<>();
-						
-		return 0;
-	}
+	public int trips(String type, String start, String end, int max){
+		Set<String> valid_routes = new HashSet<>();
+		ArrayList<String> actual_routes = new ArrayList<>();
+		String actual, route = "";
+		int w;
+		actual_routes.add(start);
 		
+		while(!actual_routes.isEmpty()){
+			route = actual_routes.get(0);
+			// We assume route is not valid
+			actual = route.substring(route.length()-1, route.length());
+			
+			for(String town : towns){
+				w = W[H.get(actual)][H.get(town)]; 
+				
+				// If they're connected
+				if(w > 0 && w < Integer.MAX_VALUE){
+					if(route.length() <= max){
+						if(town == end)
+							if(type == "=="){
+								if(route.length() == max)
+									valid_routes.add(route+town);
+							}else
+								valid_routes.add(route+town);
+						actual_routes.add(route+town);					
+					}
+				}
+			}
+			actual_routes.remove(route);
+		}
+		
+		return valid_routes.size();
+	}
+
+	public int trips_weight(String type, String start, String end, int max){
+		Set<String> valid_routes = new HashSet<>();
+		ArrayList<String> actual_routes = new ArrayList<>();
+		String actual, route = "", broute = "";
+		int w, weight = 0, pweight = 0;
+		
+		actual_routes.add("0"+","+start);
+		
+		while(!actual_routes.isEmpty()){
+			route = actual_routes.get(0);
+			broute = route;
+			// We assume route is not valid
+
+			for(String p : route.split(",")){
+				try{
+					weight = Integer.parseInt(p);
+				}catch(java.lang.NumberFormatException e){
+					route = p;
+				}
+			}
+			actual = route.substring(route.length()-1, route.length());
+			
+			for(String town : towns){
+				w = W[H.get(actual)][H.get(town)]; 
+				
+				// If they're connected
+				if(w > 0 && w < Integer.MAX_VALUE){
+					pweight = weight + w;
+					if(pweight <= max){
+						if(town == end){
+							switch(type){
+								case "==":
+									if(pweight == max)
+										valid_routes.add(Integer.toString(pweight)+","+route+town);
+								break;
+								
+								case "<":
+									if(pweight < max)
+										valid_routes.add(Integer.toString(pweight)+","+route+town);
+								break;
+								
+								case "<=":
+									valid_routes.add(Integer.toString(pweight)+","+route+town);
+								
+								default:
+									return -1;
+							}
+						}	
+						actual_routes.add(Integer.toString(pweight)+","+route+town);					
+					}
+				}
+			}
+			actual_routes.remove(broute);
+		}
+		
+		return valid_routes.size();
+	}
+	
 	public int dijkstra(String start, String end, boolean debug){
 		String actual = start;
 			
@@ -82,6 +158,7 @@ public class Graph {
 		ArrayList<String>  Q = new ArrayList<String>();
 		HashMap<String, ArrayList<String>> prev = new HashMap<String, ArrayList<String>>();
 		HashMap<String, Integer> dist = new HashMap<String, Integer>();
+		ArrayList<String> mtowns = new ArrayList<String>();		
 		
 		Integer min_iter = Integer.MAX_VALUE;
 		Integer disti = Integer.MAX_VALUE;
@@ -90,9 +167,19 @@ public class Graph {
 		int w = 0;
 		
 		for(String town : towns){
+			mtowns.add(town);
 			Q.add(town);
 			dist.put(town, Integer.MAX_VALUE);
 			prev.put(town, new ArrayList<>());
+		}
+		
+		if(start == end){
+			end = "F";
+			mtowns.add(end);
+			dist.put(end, Integer.MAX_VALUE);
+			prev.put(end, new ArrayList<>());
+			H.put(end, H.get(start));
+			Q.add(end);
 		}
 		
 		if(debug)
@@ -109,11 +196,13 @@ public class Graph {
 			for (HashMap.Entry<String, Integer> entry : dist.entrySet()) {
 			    towna = entry.getKey();
 			    disti = entry.getValue();
-			    System.out.println("comp(d["+start+"]["+towna+"]="+disti+","+min_iter+")");
+			    if(debug)
+			    	System.out.println("comp(d["+start+"]["+towna+"]="+disti+","+min_iter+")");
 			    
 			    // If the node is in Q and distance is minimum, node is actual
 			    if(Q.contains(towna) && disti < min_iter){
-			    	System.out.println("Indeed "+disti+ "<"+min_iter);
+			    	if(debug)
+			    		System.out.println("Indeed "+disti+ "<"+min_iter);
 			    	actual = towna;
 			    	min_iter = disti;
 			    }
@@ -147,7 +236,7 @@ public class Graph {
 			if(debug)
 				System.out.println("------");
 			
-			for(String town : towns){
+			for(String town : mtowns){
 				w = W[H.get(actual)][H.get(town)];
 				if(w > 0 && w < Integer.MAX_VALUE){
 					if(debug){
@@ -158,11 +247,12 @@ public class Graph {
 					}
 					if(min_iter + w  < dist.get(town)){
 						// New distance, clear neighbors. Set distance
-						if(debug)
+						if(debug){
 							System.out.println(town +" desde <");
 							System.out.println("w= "+w+" disti = "+min_iter);
 							int d = w + min_iter;
 							System.out.println("From "+actual+" to "+town+" is "+d);
+						}
 						dist.put(town, w + min_iter);
 						prev.put(town, new ArrayList<>());
 						prev.get(start).add(actual);						
