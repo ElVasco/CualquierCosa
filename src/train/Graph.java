@@ -1,8 +1,8 @@
 package trains;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+//import java.util.HashSet;
+//import java.util.Set;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -67,16 +67,15 @@ public class Graph {
 	}
 	
 	public int trips(String type, String start, String end){
-		Set<String> valid_routes = new HashSet<>();
-		Set<String> actual_routes = new HashSet<>();
-		
-				
+		//Set<String> valid_routes = new HashSet<>();
+		//Set<String> actual_routes = new HashSet<>();
+						
 		return 0;
 	}
 		
 	public int dijkstra(String start, String end, boolean debug){
 		String actual = start;
-		
+			
 	    // Weird case of do while because (u, u) = infty for all u (should be 0).
 		
 		// Initialize variables
@@ -96,9 +95,12 @@ public class Graph {
 			prev.put(town, new ArrayList<>());
 		}
 		
+		if(debug)
+			System.out.println("Start node: "+start);
+		
 		dist.put(start, 0);
 		prev.get(start).add(start);
-			
+					
 		do{
 			min_iter = Integer.MAX_VALUE;
 			disti = Integer.MAX_VALUE;
@@ -107,14 +109,28 @@ public class Graph {
 			for (HashMap.Entry<String, Integer> entry : dist.entrySet()) {
 			    towna = entry.getKey();
 			    disti = entry.getValue();
+			    System.out.println("comp(d["+start+"]["+towna+"]="+disti+","+min_iter+")");
 			    
 			    // If the node is in Q and distance is minimum, node is actual
-			    if(Q.contains(towna) && disti < min_iter)
+			    if(Q.contains(towna) && disti < min_iter){
+			    	System.out.println("Indeed "+disti+ "<"+min_iter);
 			    	actual = towna;
 			    	min_iter = disti;
+			    }
 			}
 			
+			
 			// Remove best option from Q
+			
+			if(debug){
+				System.out.println("actual: "+actual+" min_dist="+min_iter);
+				for(String q : Q){
+					System.out.print(q + " ");
+				}
+				
+			    System.out.println("p");	
+			}
+			
 			Q.remove(actual);
 			
 			if(debug){
@@ -127,22 +143,30 @@ public class Graph {
 			
 			// For every neighbor of actual
 			// TODO: We need a linked list.
+			
+			if(debug)
+				System.out.println("------");
+			
 			for(String town : towns){
 				w = W[H.get(actual)][H.get(town)];
 				if(w > 0 && w < Integer.MAX_VALUE){
 					if(debug){
-						System.out.println(W[H.get(actual)][H.get(town)]);
-						System.out.println(dist.get(town));
-						System.out.println(H.get(town));
+						System.out.println("Node "+town+" is valid");
+						System.out.println("min_dist = "+min_iter);
+						System.out.println("w["+actual+"]["+town+"]= w ="+w);
+						System.out.println("dist["+town+"]="+dist.get(town));
 					}
-					if(disti + w  < dist.get(town)){
+					if(min_iter + w  < dist.get(town)){
 						// New distance, clear neighbors. Set distance
 						if(debug)
 							System.out.println(town +" desde <");
-						dist.put(town, w);
+							System.out.println("w= "+w+" disti = "+min_iter);
+							int d = w + min_iter;
+							System.out.println("From "+actual+" to "+town+" is "+d);
+						dist.put(town, w + min_iter);
 						prev.put(town, new ArrayList<>());
 						prev.get(start).add(actual);						
-					}else if(disti + w == dist.get(town)){
+					}else if(min_iter + w == dist.get(town)){
 						// We have a tie in the best distance. So we add a to the previous.
 						if(debug)
 							System.out.println(town+" desde ==");
